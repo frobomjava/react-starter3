@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Decition Table</title>
+	<style type="text/css">
+
+		table {
+  text-align: center;
+  margin-left: 10px;
+  margin-top: 20px;
+}
+
+
+td, th {
+  width: 6rem;
+  height: 2rem;
+  border: 1px solid;
+  padding: 0px;  
+}
+
+th {
+  background: lightblue;
+  border-color: white;
+  text-align: center;
+  color: blue;
+}
+
+#condition {
+  border-bottom: 3px solid blue;
+}
+
+input[type="text"] {
+  height: 40px;
+  padding: 3px;
+  border: solid 1px #dcdcdc;
+  font-size: 15px;
+}
+
+input[type="text"]:focus,
+input[type="text"].focus {
+  border: solid 1px #707070;
+  box-shadow: 0 0 5px 1px blue;
+}
+</style>
+
+<script src="build/react.js"></script>
+<script src="build/react-dom.js"></script>
+<script src="build/browser.min.js"></script>
+
+</head>
+<body>
+<h3>Decision Table</h3>
+<div id="decisiontable"></div>
+
+
+<script type="text/babel">
+
+	var DecisionTable = React.createClass({
+
+		getInitialState: function() {
+
+		 return { dtData : this.props.dtData };
+		},
+
+		onChildChanged: function(newState) {
+			
+			var tempData = this.state.dtData;
+			console.log("tempData : " + tempData.rules[0].conditions[0]);
+			console.log("newState : " + newState);
+			tempData.names.conditions[0] = newState;
+			tempData.names.actions[0] = newState;
+			tempData.rules[0].conditions[0] = newState;
+			tempData.rules[0].actions[0] = newState;
+			
+			this.setState({dtData: tempData});
+		},
+
+		render: function() {
+			return (
+				<table>
+					<thead>
+						<DtHeader dtrules={this.state.dtData.rules} />
+					</thead>
+					
+					<DtCondition dtConditions={this.state.dtData.names.conditions} 
+						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged}/>
+					
+					<DtAction dtActions={this.state.dtData.names.actions} 
+						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged}/>
+					
+				</table>
+			);
+		}
+	});
+
+	var DtHeader = React.createClass({
+		render: function() {
+
+			var length = this.props.dtrules.length;
+			console.log("rule length : " + length);
+
+			var rules = this.props.dtrules.map( function(rule, index) {
+
+				return <th key={index}>{index+1}</th>;
+			});
+		
+			return (
+				<tr>
+					<th></th>
+					<th></th> 
+					{rules}
+				</tr>
+					
+			);
+		}
+	});
+
+	var DtCondition = React.createClass({
+		
+		onTextChanged: function(event) {
+
+			console.log("condition onTextChanged : "+ event.target.value);
+			this.props.callbackParent(event.target.value); // hey parent, I've changed!
+			//this.props.callbackParent(newState);
+		},
+		
+		render: function() {
+
+			var self = this;
+
+			var condRows = this.props.dtConditions.map( function(condName, rowIndex) {
+
+				return(
+					<tr key={rowIndex}>
+						<th>{rowIndex+1}</th>
+						<td><input type="text" value={condName} onChange={self.onTextChanged}/></td>
+						{
+							self.props.dtRules.map( function(rule, index){
+
+								return <td key={index}><input type="text" value={rule.conditions[rowIndex]} onChange={self.onTextChanged}/></td>;
+							})
+						}
+					</tr>
+				);
+			});
+
+			return (
+					<tbody>
+						{condRows}
+					</tbody>
+			);
+		}
+
+	});
+
+	var DtAction = React.createClass({
+
+		onTextChanged: function(event) {
+			
+			this.props.callbackParent(event.target.value); // hey parent, I've changed!
+		},
+
+		render: function() {
+
+			var self = this;
+
+			var actionRows = this.props.dtActions.map( function(actionName, index) {
+
+				return(
+					<tr key={index}>
+						<th>{index+1}</th>
+						<td><input type="text" value={actionName} onChange={self.onTextChanged}/></td>
+						{
+							self.props.dtRules.map( function(rule, i){
+								return <td key={i}><input type="text" value={rule.actions[index]} onChange={self.onTextChanged}/></td>;
+							})
+						}
+					</tr>
+				);
+			});
+
+			return (
+					<tbody>
+						{actionRows}
+					</tbody>
+			);
+		}
+	});
+
+	var response = {
+					names: {
+							conditions: ["hungry"],
+							actions: ["eat"]
+							},
+
+					rules: [
+						{
+							conditions: ["it's 12 o'clock"],
+							actions: ["go to dining room"]
+						}
+					]
+				};
+
+	ReactDOM.render(<DecisionTable dtData={response}/>, document.getElementById('decisiontable'));
+</script>
+</body>
+</html>
