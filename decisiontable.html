@@ -62,17 +62,35 @@ input[type="text"].focus {
 		 return { dtData : this.props.dtData };
 		},
 
-		onChildChanged: function(newState) {
+		onChildChanged: function(celltype, value, index, ruleIndex) {
 			
 			var tempData = this.state.dtData;
-			console.log("tempData : " + tempData.rules[0].conditions[0]);
-			console.log("newState : " + newState);
-			tempData.names.conditions[0] = newState;
+			
+			if (celltype == "condName") {
+				tempData.names.conditions[index] = value;
+			}
+
+			if (celltype == "condition") {
+				tempData.rules[ruleIndex].conditions[index] = value;
+			}
+
+			if (celltype == "actionName") {
+				tempData.names.actions[index] = value;
+			}
+
+			if (celltype == "action") {
+				tempData.rules[ruleIndex].actions[index] = value;
+			}
+
+			/*tempData.names.conditions[0] = newState;
 			tempData.names.actions[0] = newState;
 			tempData.rules[0].conditions[0] = newState;
-			tempData.rules[0].actions[0] = newState;
+			tempData.rules[0].actions[0] = newState; */
 			
 			this.setState({dtData: tempData});
+
+			console.log(JSON.stringify(this.state.dtData));
+			console.log("=======================================");
 		},
 
 		render: function() {
@@ -115,12 +133,34 @@ input[type="text"].focus {
 		}
 	});
 
-	var DtCondition = React.createClass({
+	var Cell = React.createClass({
 		
-		onTextChanged: function(event) {
+		render: function() {
+			return (
+					<td>
+						<input type="text" value={this.props.value} onChange={this.onTextChanged}/>
+					</td>
+				);
+		},
 
-			console.log("condition onTextChanged : "+ event.target.value);
-			this.props.callbackParent(event.target.value); // hey parent, I've changed!
+		onTextChanged: function(event) {
+			var celltype = this.props.celltype;
+			var value = event.target.value;
+			var index  = this.props.index;
+			var ruleIndex = this.props.ruleIndex;		
+
+			this.props.callbackParent(celltype, value, index, ruleIndex); // hey parent, I've changed!
+		}
+
+	});
+
+	var DtCondition = React.createClass({
+
+		onTextChanged: function(celltype, value, index, ruleIndex) {
+
+			console.log(celltype +" of " + index + " is changed");
+			this.props.callbackParent(celltype, value, index, ruleIndex);
+			//this.props.callbackParent(event.target.value); // hey parent, I've changed!
 			//this.props.callbackParent(newState);
 		},
 		
@@ -128,16 +168,18 @@ input[type="text"].focus {
 
 			var self = this;
 
-			var condRows = this.props.dtConditions.map( function(condName, rowIndex) {
+			var condRows = this.props.dtConditions.map( function(condName, condIndex) {
 
 				return(
-					<tr key={rowIndex}>
-						<th>{rowIndex+1}</th>
-						<td><input type="text" value={condName} onChange={self.onTextChanged}/></td>
+					<tr key={condIndex}>
+						<th>{condIndex+1}</th>
+						<Cell key={condIndex} celltype="condName" value={condName} index={condIndex} ruleIndex={null} callbackParent={self.onTextChanged}/>
+						
 						{
-							self.props.dtRules.map( function(rule, index){
+							self.props.dtRules.map( function(rule, ruleIndex){
 
-								return <td key={index}><input type="text" value={rule.conditions[rowIndex]} onChange={self.onTextChanged}/></td>;
+								return <Cell key={ruleIndex} celltype="condition" value={rule.conditions[condIndex]} index={condIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged}/>;															
+								
 							})
 						}
 					</tr>
@@ -155,24 +197,27 @@ input[type="text"].focus {
 
 	var DtAction = React.createClass({
 
-		onTextChanged: function(event) {
-			
-			this.props.callbackParent(event.target.value); // hey parent, I've changed!
+		onTextChanged: function(celltype, value, index, ruleIndex) {
+
+			console.log(celltype +" of " + index + " is changed");
+			this.props.callbackParent(celltype, value, index, ruleIndex);
 		},
 
 		render: function() {
 
 			var self = this;
 
-			var actionRows = this.props.dtActions.map( function(actionName, index) {
+			var actionRows = this.props.dtActions.map( function(actionName, actionIndex) {
 
 				return(
-					<tr key={index}>
-						<th>{index+1}</th>
-						<td><input type="text" value={actionName} onChange={self.onTextChanged}/></td>
+					<tr key={actionIndex}>
+						<th>{actionIndex+1}</th>
+						<Cell key={actionIndex} celltype="actionName" value={actionName} index={actionIndex} ruleIndex={null} callbackParent={self.onTextChanged}/>						
 						{
-							self.props.dtRules.map( function(rule, i){
-								return <td key={i}><input type="text" value={rule.actions[index]} onChange={self.onTextChanged}/></td>;
+							self.props.dtRules.map( function(rule, ruleIndex){
+
+								return <Cell key={ruleIndex} celltype="action" value={rule.actions[actionIndex]} index={actionIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged}/>;															
+								
 							})
 						}
 					</tr>
