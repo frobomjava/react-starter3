@@ -43,9 +43,19 @@ input[type="text"].focus {
 }
 </style>
 
+<link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+
+<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
+
+<!-- for react -->
 <script src="build/react.js"></script>
 <script src="build/react-dom.js"></script>
 <script src="build/browser.min.js"></script>
+
+<script src="build/pubsub.js"></script>
 
 </head>
 <body>
@@ -55,41 +65,108 @@ input[type="text"].focus {
 
 <script type="text/babel">
 
+
+	var tempData;
+	var tempCell;
+
 	var DecisionTable = React.createClass({
+
+		componentWillMount: function() {
+          var token = PubSub.subscribe( 'addColumnRightClicked', this.addColumnRight );
+		},
+
+		addColumnRight: function(msg, data) {
+			console.log( "called by PubSub" );
+			console.log("msg : " + msg);
+			console.log("data : " + data);
+
+			tempData = this.state.dtData;
+			tempCell = this.state.currentCell;
+
+			var noOfRules = tempData.rules.length;
+			var celltype = tempCell.celltype;
+			var selectedRuleIndex = tempCell.ruleIndex;
+
+			
+			// check whether last rule or not
+			if (selectedRuleIndex == noOfRules-1) {
+				tempData.rules.push(
+		    		{
+						conditions: [""],
+						actions: [""]
+					}
+				);
+			}
+			else if(selectedRuleIndex != null){
+				var tempRule = tempData.rules[selectedRuleIndex+1];
+				tempData.rules[selectedRuleIndex+1] = {	conditions: [], actions: [""] };
+				tempData.rules.push(tempRule);
+			}
+			else {
+				var tempRule = tempData.rules[0];
+				tempData.rules[0] = {	conditions: [], actions: [""] };
+				tempData.rules.push(tempRule);
+			}
+
+
+						
+
+			this.setState({dtData: tempData});
+
+			console.log(JSON.stringify(this.state.dtData));
+			console.log("=======================================");
+
+		},
 
 		getInitialState: function() {
 
-		 return { dtData : this.props.dtData };
+		 return {
+		 			dtData : this.props.dtData,
+		 			currentCell : {
+		 		  					celltype : "",
+		 		  					index: 0,
+		 		  					ruleIndex: 0
+		 		  				} 
+		 		};
 		},
 
 		onChildChanged: function(celltype, value, index, ruleIndex) {
 			
-			var tempData = this.state.dtData;
-			
-			if (celltype == "condName") {
-				tempData.names.conditions[index] = value;
-			}
+			tempData = this.state.dtData;
 
-			if (celltype == "condition") {
-				tempData.rules[ruleIndex].conditions[index] = value;
-			}
+			switch (celltype) {
 
-			if (celltype == "actionName") {
-				tempData.names.actions[index] = value;
-			}
+				case 'condName' : tempData.names.conditions[index] = value;
+				break;
 
-			if (celltype == "action") {
-				tempData.rules[ruleIndex].actions[index] = value;
-			}
+				case 'condition' : tempData.rules[ruleIndex].conditions[index] = value;
+				break;
 
-			/*tempData.names.conditions[0] = newState;
-			tempData.names.actions[0] = newState;
-			tempData.rules[0].conditions[0] = newState;
-			tempData.rules[0].actions[0] = newState; */
+				case 'actionName' : tempData.names.actions[index] = value;
+				break;
+
+				case 'action' : tempData.rules[ruleIndex].actions[index] = value;
+				break;
+
+			}			
 			
 			this.setState({dtData: tempData});
 
 			console.log(JSON.stringify(this.state.dtData));
+			console.log("=======================================");
+		},
+
+		setCurrentCell: function(celltype, index, ruleIndex) {
+			
+			tempCell = this.state.currentCell;
+
+			tempCell.celltype = celltype;
+			tempCell.index = index;
+			tempCell.ruleIndex = ruleIndex;		
+			
+			this.setState({currentCell: tempCell});
+
+			console.log(JSON.stringify(this.state.currentCell));
 			console.log("=======================================");
 		},
 
@@ -101,10 +178,10 @@ input[type="text"].focus {
 					</thead>
 					
 					<DtCondition dtConditions={this.state.dtData.names.conditions} 
-						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged}/>
+						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged} onFocusCell={this.setCurrentCell}/>
 					
 					<DtAction dtActions={this.state.dtData.names.actions} 
-						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged}/>
+						dtRules={this.state.dtData.rules} callbackParent={this.onChildChanged} onFocusCell={this.setCurrentCell}/>
 					
 				</table>
 			);
@@ -115,7 +192,7 @@ input[type="text"].focus {
 		render: function() {
 
 			var length = this.props.dtrules.length;
-			console.log("rule length : " + length);
+			//console.log("rule length : " + length);
 
 			var rules = this.props.dtrules.map( function(rule, index) {
 
@@ -138,7 +215,7 @@ input[type="text"].focus {
 		render: function() {
 			return (
 					<td>
-						<input type="text" value={this.props.value} onChange={this.onTextChanged}/>
+						<input type="text" className="context-menu-one" value={this.props.value} onChange={this.onTextChanged} onFocus={this.handleFocus}/>
 					</td>
 				);
 		},
@@ -147,9 +224,17 @@ input[type="text"].focus {
 			var celltype = this.props.celltype;
 			var value = event.target.value;
 			var index  = this.props.index;
-			var ruleIndex = this.props.ruleIndex;		
+			var ruleIndex = this.props.ruleIndex;
 
-			this.props.callbackParent(celltype, value, index, ruleIndex); // hey parent, I've changed!
+			this.props.callbackParent(celltype, value, index, ruleIndex);
+		},
+
+		handleFocus: function() {
+			var celltype = this.props.celltype;
+			var index  = this.props.index;
+			var ruleIndex = this.props.ruleIndex;
+
+			this.props.onFocusCell(celltype, index, ruleIndex);
 		}
 
 	});
@@ -160,8 +245,10 @@ input[type="text"].focus {
 
 			console.log(celltype +" of " + index + " is changed");
 			this.props.callbackParent(celltype, value, index, ruleIndex);
-			//this.props.callbackParent(event.target.value); // hey parent, I've changed!
-			//this.props.callbackParent(newState);
+		},
+
+		onFocusCell: function(celltype, index, ruleIndex) {
+			this.props.onFocusCell(celltype, index, ruleIndex);
 		},
 		
 		render: function() {
@@ -173,12 +260,12 @@ input[type="text"].focus {
 				return(
 					<tr key={condIndex}>
 						<th>{condIndex+1}</th>
-						<Cell key={condIndex} celltype="condName" value={condName} index={condIndex} ruleIndex={null} callbackParent={self.onTextChanged}/>
+						<Cell key={condIndex} celltype="condName" value={condName} index={condIndex} ruleIndex={null} callbackParent={self.onTextChanged} onFocusCell={self.onFocusCell}/>
 						
 						{
 							self.props.dtRules.map( function(rule, ruleIndex){
 
-								return <Cell key={ruleIndex} celltype="condition" value={rule.conditions[condIndex]} index={condIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged}/>;															
+								return <Cell key={ruleIndex} celltype="condition" value={rule.conditions[condIndex]} index={condIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged} onFocusCell={self.onFocusCell}/>;															
 								
 							})
 						}
@@ -203,6 +290,10 @@ input[type="text"].focus {
 			this.props.callbackParent(celltype, value, index, ruleIndex);
 		},
 
+		onFocusCell: function(celltype, index, ruleIndex) {
+			this.props.onFocusCell(celltype, index, ruleIndex);
+		},
+
 		render: function() {
 
 			var self = this;
@@ -212,11 +303,11 @@ input[type="text"].focus {
 				return(
 					<tr key={actionIndex}>
 						<th>{actionIndex+1}</th>
-						<Cell key={actionIndex} celltype="actionName" value={actionName} index={actionIndex} ruleIndex={null} callbackParent={self.onTextChanged}/>						
+						<Cell key={actionIndex} celltype="actionName" value={actionName} index={actionIndex} ruleIndex={null} callbackParent={self.onTextChanged} onFocusCell={self.onFocusCell}/>						
 						{
 							self.props.dtRules.map( function(rule, ruleIndex){
 
-								return <Cell key={ruleIndex} celltype="action" value={rule.actions[actionIndex]} index={actionIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged}/>;															
+								return <Cell key={ruleIndex} celltype="action" value={rule.actions[actionIndex]} index={actionIndex} ruleIndex={ruleIndex} callbackParent={self.onTextChanged} onFocusCell={self.onFocusCell}/>;															
 								
 							})
 						}
@@ -234,19 +325,55 @@ input[type="text"].focus {
 
 	var response = {
 					names: {
-							conditions: ["hungry"],
-							actions: ["eat"]
+							conditions: [""],
+							actions: [""]
 							},
 
 					rules: [
 						{
-							conditions: ["it's 12 o'clock"],
-							actions: ["go to dining room"]
+							conditions: [""],
+							actions: [""]
 						}
 					]
 				};
 
 	ReactDOM.render(<DecisionTable dtData={response}/>, document.getElementById('decisiontable'));
 </script>
+
+<script type="text/javascript">
+        
+        $(function() {
+        $.contextMenu({
+            selector: '.context-menu-one', 
+            callback: function(key, options) {
+                var m = "clicked: " + key;
+                //window.console && console.log(m) || alert(m);
+
+                switch (key) {
+
+	            	case 'add column right' : PubSub.publish( 'addColumnRightClicked' );
+	            	break;
+	            }
+            },
+
+            items: {
+                "add column right": {name: "Add Column Right", icon: "add"},
+                "add cloumn left": {name: "Add Column Left", icon: "add"},
+                "delete column": {name: "Delete Column", icon: "delete"},
+                "sep1": "---------",
+               "add row above": {name: "Add Row Above", icon: "add"},
+                "add row below": {name: "Add Row Below", icon: "add"},                
+                "delete row": {name: "Delete Row", icon: "delete"},
+                "sep2": "---------",
+                "quit": {name: "Quit", icon: function(){
+                    return 'context-menu-icon context-menu-icon-quit';
+                }}
+            }
+        });
+
+        
+        });
+    </script>   
+    
 </body>
 </html>
