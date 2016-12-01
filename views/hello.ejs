@@ -1,0 +1,16 @@
+<head>
+	<title>hello.ejs</title>
+</head>
+<body>
+	<h2>Realtime communication between the client and the server</h2>
+	<h3>Test Connection with Sails</h3>
+	
+
+	<script type"text/javascript" src="/js/dependencies/sails.io.js"></script>
+	<script type"text/javascript">
+	io.socket.get('/hello', function responseFromServer (body, response) {
+	  alert("server response " + JSON.stringify(body));
+	  console.log("The server responded with status " + response.statusCode + " and said: ", body);
+	});
+	</script>
+</body>
