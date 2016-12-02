@@ -16,7 +16,7 @@ module.exports = {
 		return res.view('hello');
 	},
 	projects: function(req,res) {
-		if (!req.session.userName) {
+		if (!req.session.userName || req.param('userName') != req.session.userName) {
 			console.log("user not signin...");
 			return res.redirect('/signin');
 		}
@@ -48,7 +48,7 @@ module.exports = {
 						console.log('*** finding projects ***');
 			            if (err) {
 							callback(err);
-						} else if (projects) {
+						} else if (projects.length>0) {
 							console.log('projects ' + JSON.stringify(projects));
 						  	return res.send(projects);
 							callback();
@@ -77,6 +77,13 @@ module.exports = {
 
 			console.log("userName : " + userName);
 
+			var newProjectName = req.param('name');
+			console.log("newProjectName : " + newProjectName);
+
+			if (!newProjectName.trim().length) {
+				return res.send(500, { error: 'Project name is empty' });
+			}
+
 			var filessystem = require('fs');
 			var dir = process.cwd()+'\\projects';
 			if (!filessystem.existsSync(dir)) {
@@ -90,9 +97,6 @@ module.exports = {
 
 				filessystem.mkdirSync(dir);
 			}
-
-			var newProjectName = req.param('name');
-			console.log("newProjectName : " + newProjectName);
 
 			var projectdir = dir+'\\'+newProjectName;
 
@@ -119,7 +123,7 @@ module.exports = {
 							} else {
 								console.log(newProject.name + ' project is created..');
 								Project.publishCreate({id:newProject.id, name:newProjectName});
-								return res.view('welcome');
+								return res.redirect('/'+userName+'/project');
 							}
 						});
 					}

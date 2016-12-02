@@ -1,24 +1,25 @@
 <h4 align="right"><a href="/signout">Signout</a></h4>
 <h2>Project List</h2>
 
+<p id="projects"></p>
+<br/>
 <form action="/<%= userName %>/project/new" method="post">
 
-  <label for="name">Create New Project</label>
-  <input name="name" type="text" placeholder="Project Name"/>
-  &nbsp; &nbsp;&nbsp; &nbsp;
+  <h4>Create New Project</h4>
+  <input id="txtProject" name="name" type="text" placeholder="Project Name"/>
+  &nbsp; &nbsp;
   <input type="submit" value="Create Project"/>
 </form>
-
-<p id="projects"></p>
 
 <script type"text/javascript" src="/js/dependencies/sails.io.js"></script>
 <script type"text/javascript">
 io.socket.get('/<%= userName %>/project', function responseFromServer (projects, response) {
+  document.getElementById('txtProject').value="";
   console.log("The server responded with status " + response.statusCode + " and said: ", projects);
 
   projects.forEach(function(project) {
     document.getElementById('projects').innerHTML += project.name + '</br>';
-	});
+  });
   
 });
 </script>
