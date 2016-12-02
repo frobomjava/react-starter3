@@ -75,21 +75,14 @@ module.exports = {
       }
 
       // Otherwise if this is an HTML-wanting browser, redirect to /welcome.
-      User.destroy({id:2}).exec(function(err, users) {
-       if (err) {return res.serverError();}
-       var userIds = users.map(function(user){return user.id;});
-       Project.destroy({user: userIds}).exec(function(err, clubs) {
-          // do something
-       });
-    });
-
-      User.destroy({id:3}).exec(function(err, users) {
-       if (err) {return res.serverError();}
-       var userIds = users.map(function(user){return user.id;});
-       Project.destroy({user: userIds}).exec(function(err, clubs) {
-          // do something
-       });
-    });
+      
+    //   User.destroy({id:3}).exec(function(err, users) {
+    //    if (err) {return res.serverError();}
+    //    var userIds = users.map(function(user){return user.id;});
+    //    Project.destroy({user: userIds}).exec(function(err, clubs) {
+    //       // do something
+    //    });
+    // });
       return res.view('welcome');
     });
   }
