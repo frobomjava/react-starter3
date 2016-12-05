@@ -16,9 +16,12 @@ module.exports = {
 		return res.view('hello');
 	},
 	projects: function(req,res) {
+		//console.log("userName in projects " + req.session.userName);
+
 		if (!req.session.userName || req.param('userName') != req.session.userName) {
-			console.log("user not signin...");
-			return res.redirect('/signin');
+			console.log("bad request...");
+			return res.badRequest('Not signed in user!');
+			//return res.redirect('/signin');
 		}
 
 		if(req.isSocket){
@@ -44,7 +47,7 @@ module.exports = {
 
 				function findProject(callback) {
 					console.log("criteria : " + JSON.stringify(criteria));
-					Project.find(criteria).exec(function(err, projects) {
+					Project.find(criteria).sort('name ASC').exec(function(err, projects) {
 						console.log('*** finding projects ***');
 			            if (err) {
 							callback(err);
@@ -71,14 +74,15 @@ module.exports = {
 	},
 	create: function(req, res) {
 
-		if(req.method === 'POST'){
+		if(req.method === 'POST' && req.param('userName') === req.session.userName
+		 && req.param('name') != 'undefined'){
 
 			var userName =  req.session.userName;
 
 			console.log("userName : " + userName);
 
 			var newProjectName = req.param('name');
-			console.log("newProjectName : " + newProjectName);
+			console.log("newProjectName : " + newProjectName);			
 
 			if (!newProjectName.trim().length) {
 				return res.send(500, { error: 'Project name is empty' });
@@ -88,7 +92,7 @@ module.exports = {
 			var dir = process.cwd()+'\\projects';
 			if (!filessystem.existsSync(dir)) {
 
-				filessystem.mkdirSync(dir);//'/tmp/test'
+				filessystem.mkdirSync(dir);
 			}
 			
 			dir = process.cwd()+'\\projects\\'+userName;
@@ -137,10 +141,11 @@ module.exports = {
 			}
 		}
 		else {
-			if (req.session.userName) {
-				return redirect('/'+req.session.userName+'/project');
-			}
-			return redirect('/signin');
+			return res.badRequest('Bad Request!');
+			// if (req.session.userName) {
+			// 	return res.redirect('/'+req.session.userName+'/project');
+			// }
+			// return res.redirect('/signin');
 		}
 	}
 	
