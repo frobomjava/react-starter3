@@ -45,6 +45,7 @@ module.exports.routes = {
   'post /signin': 'UserController.signin',
   'post /signup': 'UserController.signup',
   '/signout': 'UserController.signout',
+  'get /project/socket/join': 'ProjectController.socketJoin'
 
 /**************************************************************************
 /signup

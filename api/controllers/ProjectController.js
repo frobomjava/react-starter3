@@ -22,11 +22,10 @@ module.exports = {
 			console.log("bad request...");
 			return res.badRequest('Not signed in user!');
 			//return res.redirect('/signin');
-		}
-
-		if(req.isSocket){
+		}		
 			console.log('userId : ' + req.session.me);
 			var userId = req.session.me;
+			var userName = req.session.userName;
 			var criteria = {user: userId};
 
 			async.series([
@@ -51,13 +50,12 @@ module.exports = {
 						console.log('*** finding projects ***');
 			            if (err) {
 							callback(err);
-						} else if (projects.length>0) {
-							console.log('projects ' + JSON.stringify(projects));
-						  	return res.send(projects);
-							callback();
-						} else {
-							callback({message : 'no projects yet...'});
 						}
+						if (projects) {
+							console.log('projects ' + JSON.stringify(projects));
+						  	//return res.send(projects);
+							return res.view('project', {projectList : projects, userName: userName});
+						} 
 					});
 				}
 			],
@@ -65,12 +63,7 @@ module.exports = {
         		res.serverError(err);
 			}
 		);
-
-		}
-		else {
-			var userName = req.session.userName;
-			return res.view('project', {'userName': userName});
-		}
+		
 	},
 	create: function(req, res) {
 
@@ -124,10 +117,13 @@ module.exports = {
 							if(error){
 								console.log(error);
 								return res.serverError(error);
-							} else {
+							}
+							if (newProject) {
 								console.log(newProject.name + ' project is created..');
-								Project.publishCreate({id:newProject.id, name:newProjectName});
-								return res.redirect('/'+userName+'/project');
+								sails.sockets.broadcast('projectSocket', 'newProject', newProject);
+								return;
+								// Project.publishCreate({id:newProject.id, name:newProjectName});
+								// return res.redirect('/'+userName+'/project');
 							}
 						});
 					}
@@ -142,11 +138,21 @@ module.exports = {
 		}
 		else {
 			return res.badRequest('Bad Request!');
-			// if (req.session.userName) {
-			// 	return res.redirect('/'+req.session.userName+'/project');
-			// }
-			// return res.redirect('/signin');
 		}
+	},
+
+	socketJoin: function(req, res) {
+		if (!req.isSocket) {
+			return res.badRequest();
+		}
+
+		sails.sockets.join(req, 'projectSocket');
+
+		var socketId = sails.sockets.getId(req);
+
+		sails.log('req socketID is: ' + socketId);
+
+		return res.json(socketId);
 	}
 	
 };
