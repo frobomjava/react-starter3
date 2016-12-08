@@ -6,13 +6,11 @@
 <i id="status">Loading projects..</i>
 <div id="project-list-container"></div>
 <br/>
-<form action="/<%= userName %>/project/new" method="post">
 
   <h5>Create New Project</h5>
   <input id="txtProject" name="name" type="text" placeholder="Project Name"/>
   &nbsp; &nbsp;
-  <input type="submit" value="Create Project"/>
-</form>
+  <input type="button" value="Create Project" onClick="sendRequest()"/>
 
 <script type"text/javascript" src="/js/dependencies/sails.io.js"></script>
 
@@ -28,27 +26,19 @@
   else {
     document.getElementById("status").style.display = "none";   
   }
+
+  function sendRequest() {
+    var pname = document.getElementById("txtProject").value;
+    console.log('... sendRequest to server to create project ...');
+    io.socket.post('/<%= userName %>/project/new', { projectName: pname}, function (resData, jwRes) {
+      if (jwRes.error) {
+        console.log(jwRes.statusCode); // => e.g. 403
+        return;
+      }
+      console.log(jwRes.statusCode);
+      console.log('resData : '+resData);
+    });
+
+  }
 </script>
 <script type="text/babel" src="/js/projects.js"></script>
-
-<!--
-<script type"text/javascript">
-io.socket.get('/<%= userName %>/project', function responseFromServer (projects, response) {
-  document.getElementById('txtProject').value="";
-  //console.log("The server responded with status " + response.statusCode + " and said: ", projects);
-
-  if (!projects.length) {  
-  	document.getElementById("status").innerHTML = "No Project...";
-  }
-  else {
-  	  document.getElementById("status").style.display = "none";
-	  projects.forEach(function(project, i) {
-	    document.getElementById('projects').innerHTML += (i+1) + '. ' + '<a href="">'  + project.name + '</a></br>';
-	  });
-  }  
-  
-});
-</script>
--->
-
-

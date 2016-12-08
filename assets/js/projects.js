@@ -9,7 +9,7 @@ var ProjectList = React.createClass({
 	 //    });
 
 	    io.socket.get('/project/socket/join', function (resData) {
-	    	console.log("... sending request to server ...");
+	    	console.log("... client socket join to server socket ...");
 	       	console.log('resData ' + resData);
 	    });
 

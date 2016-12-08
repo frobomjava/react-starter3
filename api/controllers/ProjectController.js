@@ -68,13 +68,13 @@ module.exports = {
 	create: function(req, res) {
 
 		if(req.method === 'POST' && req.param('userName') === req.session.userName
-		 && req.param('name') != 'undefined'){
+		 && req.param('projectName') != 'undefined'){
 
 			var userName =  req.session.userName;
 
 			console.log("userName : " + userName);
 
-			var newProjectName = req.param('name');
+			var newProjectName = req.param('projectName');
 			console.log("newProjectName : " + newProjectName);			
 
 			if (!newProjectName.trim().length) {
@@ -121,7 +121,8 @@ module.exports = {
 							if (newProject) {
 								console.log(newProject.name + ' project is created..');
 								sails.sockets.broadcast('projectSocket', 'newProject', newProject);
-								return;
+								return res.ok();
+								
 								// Project.publishCreate({id:newProject.id, name:newProjectName});
 								// return res.redirect('/'+userName+'/project');
 							}
