@@ -20,6 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
 <script>
   var prjList = <%- JSON.stringify(projectList) %>;
+  var userName = <%- JSON.stringify(userName) %>;
+  
   if (!prjList.length) {  
     document.getElementById("status").innerHTML = "No Project...";
   }

@@ -28,56 +28,58 @@ module.exports = {
 			var userName = req.session.userName;
 			var criteria = {user: userId};
 
-			async.series([
-				function findUser(callback) {
-	          		User.findOne({id: userId}).exec(function(err, user) {
-			            if (err) {
-							callback(err);
-						}
-						else if (user) {
-							criteria.user = user.id;
-							callback();
-						}
-						else {
-							callback({message: 'no user'})
-						}
-					});
-				},
-
-				function findProject(callback) {
-					console.log("criteria : " + JSON.stringify(criteria));
-					Project.find(criteria).sort('name ASC').exec(function(err, projects) {
-						console.log('*** finding projects ***');
-			            if (err) {
-							callback(err);
-						}
-						if (projects) {
-							console.log('projects ' + JSON.stringify(projects));
-						  	//return res.send(projects);
-							return res.view('project', {projectList : projects, userName: userName});
-						} 
-					});
+			Project.find(criteria).sort('name ASC').exec(function(err, projects) {
+				console.log('*** finding projects ***');
+	            if (err) {
+					return res.serverError(err);
 				}
-			],
-			function(err) {
-        		res.serverError(err);
-			}
-		);
+				if (projects) {
+					console.log('projects ' + JSON.stringify(projects));
+				  	//return res.send(projects);
+					return res.view('project', {projectList : projects, userName: userName});
+				} 
+			});
+
+		// 	async.series([
+		// 		function findUser(callback) {
+	 //          		User.findOne({id: userId}).exec(function(err, user) {
+		// 	            if (err) {
+		// 					callback(err);
+		// 				}
+		// 				else if (user) {
+		// 					criteria.user = user.id;
+		// 					callback();
+		// 				}
+		// 				else {
+		// 					callback({message: 'no user'})
+		// 				}
+		// 			});
+		// 		},
+
+		// 		function findProject(callback) {
+		// 			console.log("criteria : " + JSON.stringify(criteria));
+					
+		// 		}
+		// 	],
+		// 	function(err) {
+  //       		res.serverError(err);
+		// 	}
+		// );
 		
 	},
 	create: function(req, res) {
 
-		if(req.method === 'POST' && req.param('userName') === req.session.userName
-		 && req.param('projectName') != 'undefined'){
+		if(req.method === 'POST' && req.param('userName') === req.session.userName ){
 
 			var userName =  req.session.userName;
 
 			console.log("userName : " + userName);
 
 			var newProjectName = req.param('projectName');
-			console.log("newProjectName : " + newProjectName);			
+			console.log("newProjectName : " + newProjectName);
 
 			if (!newProjectName.trim().length) {
+				console.log("xxx newProjectName is empty xxx" );
 				return res.send(500, { error: 'Project name is empty' });
 			}
 

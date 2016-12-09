@@ -9,7 +9,7 @@ var ProjectList = React.createClass({
 	 //    });
 
 	    io.socket.get('/project/socket/join', function (resData) {
-	    	console.log("... client socket join to server socket ...");
+	    	console.log("... client socket join to server socket...");
 	       	console.log('resData ' + resData);
 	    });
 
@@ -24,7 +24,7 @@ var ProjectList = React.createClass({
 	    
 	},
 	getInitialState: function(){
-	    return { projects: prjList }
+	    return { projects: prjList, userName: userName }
     },
     updateProjectList: function(project) {
     	console.log('new project\'s name : ' + project.name);
@@ -36,12 +36,12 @@ var ProjectList = React.createClass({
 	    document.getElementById('txtProject').value = "";
     },
 	render: function() {
-		// projectList.forEach(function(project, i) {
-      	// document.getElementById('projects').innerHTML += (i+1) + '. ' + '<a href="">'  + project.name + '</a></br>';
+		var userName = this.state.userName;
       	var projects = this.state.projects.map(function (project, index) {
+      		var url = '/' + userName + '/project/in/'+ project.name + '/files';
       		return(
       			<li key={project.id}>
-      				<a href='#'>{project.name}</a>
+      				<a href={url}>{project.name}</a>
       			</li>
       		)
       	});

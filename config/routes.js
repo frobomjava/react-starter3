@@ -40,6 +40,8 @@ module.exports.routes = {
   '/hello': 'ProjectController.hello',
   '/:userName/project': 'ProjectController.projects',
   '/:userName/project/new' : 'ProjectController.create',
+  '/:userName/project/in/:projectName/files': 'DtFileController.files',
+  '/:userName/project/in/:projectName/files/new':  'DtFileController.create',//'DtFileController.files'
 
   // Endpoints
   'post /signin': 'UserController.signin',

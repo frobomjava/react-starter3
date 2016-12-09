@@ -1,0 +1,59 @@
+<h2>WorkSpace</h2>
+<h4><%= projectName %>&nbsp;&nbsp;<input id="addBtn" type="button" value="+"></h4>
+<ul></ul>
+
+<script src="/js/dependencies/ajax.googleapis.com-ajax-libs-jquery-1.12.4-jquery.min.js"></script>
+<script>
+	$(document).ready(function(){
+
+		var filesList = <%- JSON.stringify(filesList) %>;
+
+		$.each( filesList, function( key, value ) {
+		  alert( key + ": " + value );
+		  $("ul").append('<li>' +value.name+ '</li>');
+		});
+		
+	    
+	    $("#addBtn").click(function(){
+	        $("ul").append(
+	        				'<li>'+
+	        					'<input id="txtFile" type="text" placeholder="File Name"/>'
+	        					+ '&nbsp;&nbsp;<input id="createFileBtn" type="button" value="Create File"/>'
+	        				+'</li>'
+	        			);
+	    });
+
+	    $(document).on("click", "#createFileBtn" , function() {
+	     	var fileName = $(this).prev("#txtFile").val(); //$('#txtFile').value;
+	     	alert('file name : ' + fileName);
+
+            $(this).parent().remove();
+
+            console.log('... sendRequest to server to create file ...');
+		    io.socket.post('/<%= userName %>/project/in/<%= projectName %>/files/new', { fileName: fileName}, function (resData, jwRes) {
+		      if (jwRes.error) {
+		        console.log(jwRes.statusCode); // => e.g. 403
+		        return;
+		      }
+		      console.log(jwRes.statusCode);
+		      console.log('resData : '+resData);
+		    });
+        });
+
+	     $("#createFileBtn").click(function(){
+	     	alert('create file');
+	     	var fileName = $('#txtFile').value;
+	        $("ul").remove("#txtFile, #createFileBtn");
+
+	        console.log('... sendRequest to server to create file ...');
+		    io.socket.post('/<%= userName %>/project/in/<%= projectName %>/files/new', { fileName: fileName}, function (resData, jwRes) {
+		      if (jwRes.error) {
+		        console.log(jwRes.statusCode); // => e.g. 403
+		        return;
+		      }
+		      console.log(jwRes.statusCode);
+		      console.log('resData : '+resData);
+		    });
+	    });
+	});
+</script>
